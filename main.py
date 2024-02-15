@@ -1,6 +1,6 @@
 import pygame
 import math
-from player_info import direction, counter, player_X , player_Y , player_images
+from player_info import direction, counter, player_X , player_Y , player_images, turns_allowed
 from board import boards
 pygame.init()
 
@@ -50,6 +50,7 @@ def draw_board():
       if level[i][j] == 9:
         pygame.draw.line(screen, 'white', (j * num2, i * num1 + (0.5 * num1)),
                                           (j * num2 + num2, i * num1 + (0.5 * num1)), 3)
+
 def draw_player():
   # 0 - RIGHT, 1 - LEFT, 2 - UP, 3 - DOWN
   if direction == 0:
@@ -60,6 +61,20 @@ def draw_player():
     screen.blit(pygame.transform.rotate(player_images[counter // 5], 90), (player_X, player_Y))
   elif direction == 3:
     screen.blit(pygame.transform.rotate(player_images[counter // 5], 270), (player_X, player_Y))
+
+def check_position(center_X, center_Y):
+  turns = [False] * 4
+  num1 = ((HEIGHT - 50) // 32)
+  num2 = (WIDTH // 30)
+  num3 = 15
+  if center_X // 30 < 29:
+    if direction == 0:
+      print('check check')
+  else:
+    turns[0] = True
+    turns[1] = True
+  return turns
+
 run = True
 
 while run:
@@ -74,6 +89,11 @@ while run:
     flicker = True
   draw_board()
   draw_player()
+  center_X = player_X + 21
+  center_Y = player_Y + 21
+  pygame.draw.circle(screen,'white',(center_X, center_Y), 4)
+  turns_allowed = check_position(center_X, center_Y)
+
   # setting up pygame
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
