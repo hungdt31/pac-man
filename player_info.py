@@ -5,3 +5,4 @@ player_Y = 462 - 8
 player_images = []
 # R - L - U - D
 turns_allowed = [False] * 4
+

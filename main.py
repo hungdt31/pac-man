@@ -69,15 +69,26 @@ def draw_player():
 
 def check_position(center_X, center_Y):
   turns = [False] * 4
-  x_index = ((center_X + half_width_cell) // width_cell) - 1
-  y_index = ((center_Y + half_height_cell) // height_cell) - 1
+  x_index = (center_X // width_cell)
+  y_index = (center_Y // height_cell)
+  reminder_x = center_X % width_cell
+  reminder_y = center_Y % height_cell
+  directions = [(1, 0), (-1, 0), (0, -1), (0, 1)]  # Right, Left, Up, Down
 
-  d = [(1, 0), (-1, 0), (0, -1), (0, 1)]  # Right, Left, Up, Down
-  for i, (dx, dy) in enumerate(d):
-    new_x = x_index + dx
-    new_y = y_index + dy
-    if 0 <= new_x < len(level) and 0 <= new_y < len(level[0]) and level[new_y][new_x] < 3:
-      turns[i] = True
+  for i, (dx, dy) in enumerate(directions):
+      new_x = x_index + dx
+      new_y = y_index + dy 
+      if 0 <= new_y < len(level) and 0 <= new_x < len(level[0]):
+        if level[new_y][new_x] < 3:
+          turns[i] = True
+        elif i == 0 and reminder_x <= half_width_cell:
+          turns[i] = True
+        elif i == 1 and reminder_x >= half_width_cell:
+          turns[i] = True
+        elif i == 2 and reminder_y >= half_height_cell:
+          turns[i] = True
+        elif i == 3 and reminder_y <= half_height_cell:
+          turns[i] = True
   return turns
 
 def move_player(player_X, player_Y):
@@ -105,9 +116,10 @@ while run:
     flicker = True
   draw_board()
   draw_player()
-  center_X = player_X + width_cell // 2 + 4
-  center_Y = player_Y + height_cell // 2 + 8
-  pygame.draw.circle(screen,'white',(center_X, center_Y), 4)
+  center_X = player_X + half_width_cell + 4
+  center_Y = player_Y + half_height_cell + 8
+  # pygame.draw.circle(screen,'white',(player_X, player_Y), 4)
+  # pygame.draw.circle(screen,'white',(center_X, center_Y), 4)
   turns_allowed = check_position(center_X, center_Y)
   player_X, player_Y = move_player(player_X, player_Y)
   # setting up pygame
