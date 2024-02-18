@@ -5,26 +5,32 @@ from board import boards
 pygame.init()
 
 WIDTH = 900
-HEIGHT = 754
+HEIGHT = 774
 screen = pygame.display.set_mode([WIDTH, HEIGHT])
 timer = pygame.time.Clock()
 fps = 60
 font = pygame.font.Font('freesansbold.ttf',20)
 level = boards
 color = 'blue'
-player_speed = 2
+player_speed = 3
 PI = math.pi
 flicker = False
 direction_command = 0
-
+score = 0
+power_up = False
+power_counter = 0
+eaten_ghost = [False] * 4
+start_counter = 0
+moving = False
+lives = 3
 # chia screen thành các ô vuông nhỏ có width = height_cell và height = width_cell
-height_cell = ((HEIGHT - 50) // 32)
+height_cell = ((HEIGHT - 70) // 32)
 width_cell = (WIDTH // 30)
 half_width_cell = width_cell // 2
 half_height_cell = height_cell // 2
 
 for i in range(1,5):
-  player_images.append(pygame.transform.scale(pygame.image.load(f'assets/player/{i}.bmp'),(35, 35)))
+  player_images.append(pygame.transform.scale(pygame.image.load(f'assets/player/{i}.bmp'),(40, 40)))
 def draw_board():
   for i in range(len(level)):
     for j in range(len(level[i])):
@@ -102,11 +108,33 @@ def move_player(player_X, player_Y):
   elif direction == 3 and turns_allowed[3]:
     player_Y += player_speed
   return player_X, player_Y
-run = True
 
+def check_collision(center_X, center_Y):
+  global score, power_up, power_counter, eaten_ghost
+  x_index = center_X // width_cell
+  y_index = center_Y // height_cell
+  if level[y_index][x_index] == 1:
+    level[y_index][x_index] = 0
+    score += 10
+  elif level[y_index][x_index] == 2:
+    level[y_index][x_index] = 0
+    score += 50
+    power_up = True
+    power_counter = 0
+    eaten_ghost = [False] * 4
+
+def draw_misc():
+  score_text = font.render(f'Score: {score}', True, 'white')
+  screen.blit(score_text,(15, 730))
+  if power_up:
+    pygame.draw.circle(screen, 'blue', (140, 740), 15)
+  for i in range(lives):
+    screen.blit(pygame.transform.scale(pygame.image.load('assets/player/heart.png'), (30, 30)), (650 + i * 40, 725))
+
+run = True
 while run:
   timer.tick(fps)
-  screen.fill('black')
+  
   if counter < 19:
     counter += 1
     if counter > 3:
@@ -114,6 +142,21 @@ while run:
   else:
     counter = 0
     flicker = True
+  
+  # active power up
+  if power_up and power_counter < 600:
+    power_counter += 1
+  elif power_up and power_counter >= 600:
+    power_counter = 0
+    power_up = False
+    eaten_ghost = [False] * 4
+  
+  if start_counter < 120:
+    moving = False
+    start_counter += 1
+  else:
+    moving = True
+  screen.fill('black')
   draw_board()
   draw_player()
   center_X = player_X + half_width_cell + 4
@@ -121,7 +164,11 @@ while run:
   # pygame.draw.circle(screen,'white',(player_X, player_Y), 4)
   # pygame.draw.circle(screen,'white',(center_X, center_Y), 4)
   turns_allowed = check_position(center_X, center_Y)
-  player_X, player_Y = move_player(player_X, player_Y)
+  if moving:
+    player_X, player_Y = move_player(player_X, player_Y)
+  check_collision(center_X, center_Y)
+  draw_misc()
+  # print(score)
   # setting up pygame
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
