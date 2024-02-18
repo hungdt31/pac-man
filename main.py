@@ -1,6 +1,10 @@
 import pygame
 import math
-from ghost_info import blinky_img, pinky_img, inky_img,clyde_img, spooked_img, dead_img
+from ghost_img import blinky_img, pinky_img, inky_img, clyde_img, spooked_img, dead_img
+from blinky import blinky_x, blinky_y, blinky_direction, blinky_dead, blinky_box
+from inky import inky_x, inky_y, inky_direction, inky_dead, inky_box
+from pinky import pinky_x, pinky_y, pinky_direction, pinky_dead, pinky_box
+from clyde import clyde_x, clyde_y, clyde_direction, clyde_dead, clyde_box
 from board import boards
 pygame.init()
 
@@ -15,6 +19,7 @@ color = 'blue'
 player_speed = 3
 PI = math.pi
 flicker = False
+ghost_speeds = [2, 2, 2, 2]
 
 score = 0
 power_up = False
@@ -30,7 +35,6 @@ height_cell = ((HEIGHT - 70) // 32)
 width_cell = (WIDTH // 30)
 half_width_cell = width_cell // 2
 half_height_cell = height_cell // 2
-
 
 class Map:
   def draw_board(self):
@@ -65,7 +69,7 @@ class Map:
     score_text = font.render(f'Score: {score}', True, 'white')
     screen.blit(score_text,(15, 730))
     if power_up:
-      pygame.draw.circle(screen, 'blue', (140, 740), 15)
+      pygame.draw.circle(screen, 'blue', (150, 740), 15)
     for i in range(lives):
       screen.blit(pygame.transform.scale(pygame.image.load('assets/player/heart.png'), (30, 30)), (650 + i * 40, 725))
 
@@ -110,40 +114,49 @@ def check_collision(center_X, center_Y):
 
 
 class Ghost:
-  def __init__(self, x_coord, y_coord, target, speed, img, box, id):
+  def __init__(self, x_coord, y_coord, target, speed, img, direct, dead, box, id):
     self.x_pos = x_coord
     self.y_pos = y_coord
-    self.center_x = self.x_pos 
-    self.center_y = self.y_pos 
+    self.center_x = self.x_pos + 22
+    self.center_y = self.y_pos + 22
     self.target = target
     self.speed = speed
     self.img = img
+    self.direction = direct
+    self.dead = dead
     self.in_box = box
     self.id = id
-    self.turns, self.in_box = self.check_collision()
+    # self.turns, self.in_box = self.check_collisions()
     self.rect = self.draw()
-  def draw(self):
-    if True:
-      screen.blit(self.img, (self.x_pos, self.y_pos))
-    else:
-      screen.blit(self.img, (self.x_pos, self.y_pos))
-    # return ghost_rect
 
+  def draw(self):
+    if (not power_up and not self.dead) or (eaten_ghost[self.id] and power_up and not self.dead):
+      screen.blit(self.img, (self.x_pos, self.y_pos))
+    elif power_up and not self.dead and not eaten_ghost[self.id]:
+      screen.blit(spooked_img, (self.x_pos, self.y_pos))
+    else:
+      screen.blit(dead_img, (self.x_pos, self.y_pos))
+    ghost_rect = pygame.rect.Rect((self.center_x - 18, self.center_y - 18), (36, 36))
+    return ghost_rect
+  
+  def check_collisions(self):
+    pass
+    # return self.turns, self.in_box
+  
 class Player:
     _instance = None
 
     def __init__(self):
-        # Private constructor
-        self.direction= 0
-        self.direction_command = 0
-        self.player_X = 480 - 4
-        self.player_Y = 462 - 8
-        self.player_images = []
-        for i in range(1,5):
-          self.player_images.append(pygame.transform.scale(pygame.image.load(f'assets/player/{i}.bmp'),(40, 40)))
-        # R - L - U - D
-        self.turns_allowed = [False] * 4
-        pass
+      # Private constructor
+      self.direction= 0
+      self.direction_command = 0
+      self.player_X = 480 - 4
+      self.player_Y = 462 - 8
+      self.player_images = []
+      for i in range(1,5):
+        self.player_images.append(pygame.transform.scale(pygame.image.load(f'assets/player/{i}.bmp'),(40, 40)))
+      # R - L - U - D
+      self.turns_allowed = [False] * 4
     
     @classmethod
     def get_player(self):
@@ -213,6 +226,11 @@ while run_game:
 
   mp = Map()
   player = Player.get_player()
+  targets = [(player.player_X, player.player_Y)] * 4
+  blinky = Ghost(blinky_x, blinky_y, targets[0], ghost_speeds[0], blinky_img, blinky_direction, blinky_dead, blinky_box, 0)
+  inky = Ghost(inky_x, inky_y, targets[1], ghost_speeds[1], inky_img, inky_direction, inky_dead, inky_box, 1)
+  pinky = Ghost(pinky_x, pinky_y, targets[2], ghost_speeds[2], pinky_img, pinky_direction, pinky_dead, pinky_box, 2)
+  clyde = Ghost(clyde_x, clyde_y, targets[3], ghost_speeds[3], clyde_img, clyde_direction, clyde_dead, clyde_box, 3)
   mp.draw_board()
   player.process()
   mp.draw_misc()
